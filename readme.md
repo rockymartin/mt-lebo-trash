@@ -2,7 +2,7 @@
 
 A modern web application that helps Mt. Lebanon, PA residents find their trash and recycling pickup schedule by street name. Features automatic calendar generation, holiday adjustments, recycling week tracking, and calendar export functionality.
 
-🌐 **Live Site**: https://mt-lebo-trash-web-jxb36ffmoq-ue.a.run.app/
+🌐 **Live Site**: https://mtlebotrash.com
 
 ## Features
 
