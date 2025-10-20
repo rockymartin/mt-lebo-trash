@@ -1,0 +1,11 @@
+# robots.txt for Mt. Lebanon Trash & Recycling Calendar
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://mt-lebo-trash-web-jxb36ffmoq-ue.a.run.app/sitemap.xml
+
+# Crawl delay (be nice to the server)
+Crawl-delay: 1
+

@@ -1,0 +1,30 @@
+{
+  "name": "mt-lebo-trash",
+  "version": "1.0.0",
+  "description": "Mt. Lebanon Trash & Recycling Collection Calendar - Find your pickup schedule by street name",
+  "scripts": {
+    "dev": "python3 -m http.server 8080 --directory site",
+    "start": "python3 -m http.server 8080 --directory site"
+  },
+  "keywords": [
+    "trash",
+    "recycling", 
+    "calendar",
+    "mt-lebanon",
+    "pittsburgh",
+    "waste-collection",
+    "garbage-pickup",
+    "municipal-services"
+  ],
+  "author": "Mt. Lebo Trash Calendar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/mt-lebo-trash.git"
+  },
+  "homepage": "https://mt-lebo-trash-web-jxb36ffmoq-ue.a.run.app/",
+  "bugs": {
+    "url": "https://github.com/yourusername/mt-lebo-trash/issues"
+  }
+}
+
