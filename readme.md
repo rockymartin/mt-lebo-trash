@@ -68,6 +68,43 @@ export GCP_REGION="us-east1"
 ./scripts/deploy-cloud-run.sh
 ```
 
+### Continuous deployment (GitHub Actions)
+
+Pushes to **`main`** run [`.github/workflows/deploy-cloud-run.yml`](.github/workflows/deploy-cloud-run.yml): Cloud Build produces the image (same as the script above), then Cloud Run is updated.
+
+**Repository Variables** (Settings → Secrets and variables → Actions → Variables):
+
+| Variable | Example |
+|----------|---------|
+| `GCP_PROJECT_ID` | Your GCP project ID |
+| `GCP_REGION` | `us-east1` |
+
+**Repository Secrets** — use **Workload Identity Federation** (no long-lived JSON keys):
+
+| Secret | Value |
+|--------|--------|
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Full provider resource name, e.g. `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_NAME/providers/PROVIDER_NAME` |
+| `GCP_SERVICE_ACCOUNT` | Email of a deployer service account |
+
+Grant that service account at least:
+
+- **Cloud Build Editor** (`roles/cloudbuild.builds.editor`) — or Editor on the project for small setups  
+- **Cloud Run Admin** (`roles/run.admin`)  
+- **Service Account User** (`roles/iam.serviceAccountUser`) on the Cloud Run runtime service account  
+- Permission for Cloud Build to push to **Container Registry** / **`gcr.io`** (often included via Cloud Build service account defaults)
+
+Setup walkthrough: [Authenticate to Google Cloud from GitHub Actions (WIF)](https://github.com/google-github-actions/auth#setting-up-workload-identity-federation).
+
+**Difficulty:** One-time GCP wiring (~15–30 minutes if you follow Google’s guide). After that, merges to `main` deploy automatically.
+
+**Cost (typical):**
+
+| Piece | Rough notes |
+|-------|----------------|
+| **GitHub Actions** | Uses a few CPU-minutes per deploy on hosted runners; within normal free allowances for many repos. |
+| **Cloud Build** | Minutes accumulate per build; GCP includes a monthly free tier — small nginx builds usually stay low. |
+| **Cloud Run** | Static nginx service with low traffic is typically **cents/month** on scale-to-zero–friendly settings; you already pay when deploying manually today. |
+
 ## Data Source
 
 Street schedule data is sourced from the official [Mt. Lebanon Public Works garbage collection page](https://mtlebanon.org/residents/public-works/garbage/).
