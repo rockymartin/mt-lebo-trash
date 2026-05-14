@@ -2,6 +2,9 @@
   const streetInput = document.getElementById('street-input');
   const results = document.getElementById('results');
   const autocompleteList = document.getElementById('autocomplete-list');
+  const searchSection = document.getElementById('street-search');
+  const compactStreetName = document.getElementById('compact-street-name');
+  const searchChangeBtn = document.getElementById('search-change-btn');
 
   // Street to weekday mapping (0=Sunday, 1=Monday, etc.)
   const dayToWeekday = {
@@ -144,6 +147,14 @@
     }).join('');
 
     return formatted.replace(/\s+/g, ' ').trim();
+  }
+
+  function setSearchMinimized(minimized, resolvedStreetName) {
+    if (!searchSection) return;
+    searchSection.classList.toggle('search--compact', minimized);
+    if (minimized && resolvedStreetName && compactStreetName) {
+      compactStreetName.textContent = formatStreetName(resolvedStreetName);
+    }
   }
 
   function getPickupRuleForStreet(streetName) {
@@ -1032,12 +1043,14 @@
     results.innerHTML = '';
     
     if (!streetName.trim()) {
+      setSearchMinimized(false);
       results.innerHTML = '<div class="card"><p>Please enter a street name to find your collection day.</p></div>';
       return;
     }
     
     const rule = getPickupRuleForStreet(streetName);
     if (!rule) {
+      setSearchMinimized(false);
       results.innerHTML = `
         <div class="card">
           <h2>Street Not Found</h2>
@@ -1246,6 +1259,16 @@
     }
 
     results.appendChild(container);
+    setSearchMinimized(true, streetName);
+    requestAnimationFrame(() => {
+      const reducedMotion =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      results.scrollIntoView({
+        behavior: reducedMotion ? 'instant' : 'smooth',
+        block: 'start'
+      });
+    });
   }
 
   // Autocomplete functionality
@@ -1284,6 +1307,7 @@
     
     if (query.length < 2) {
       autocompleteList.style.display = 'none';
+      setSearchMinimized(false);
       results.innerHTML = '';
       return;
     }
@@ -1347,6 +1371,15 @@
   loadStreetSchedule().then(() => {
     streetInput.addEventListener('input', updateAutocomplete);
     streetInput.addEventListener('keydown', handleKeydown);
+
+    if (searchChangeBtn) {
+      searchChangeBtn.addEventListener('click', () => {
+        setSearchMinimized(false);
+        autocompleteList.style.display = 'none';
+        streetInput.focus();
+        streetInput.select();
+      });
+    }
     
     // Hide autocomplete when clicking outside
     document.addEventListener('click', (e) => {

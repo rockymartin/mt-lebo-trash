@@ -11,6 +11,9 @@
 html, body { height: 100%; }
 body {
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   background: linear-gradient(180deg, #0b1020, var(--bg));
   color: var(--text);
@@ -33,9 +36,30 @@ body {
   border-width: 0;
 }
 
-.site-header, .site-footer {
+.site-header {
   text-align: center;
   padding: 16px 12px;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 16px 12px;
+  margin-top: auto;
+}
+
+.site-footer p {
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.site-footer a {
+  color: var(--accent);
+}
+
+.site-footer a:hover {
+  color: var(--accent-strong);
 }
 .site-header h1 { 
   margin: 0 0 8px; 
@@ -54,11 +78,16 @@ body {
   max-width: 100%;
   margin: 0 auto;
   padding: 12px;
+  flex: 1 0 auto;
 }
 
 /* Mobile-first responsive design */
 @media (min-width: 640px) {
-  .site-header, .site-footer {
+  .site-header {
+    padding: 24px 16px;
+  }
+
+  .site-footer {
     padding: 24px 16px;
   }
   .site-header h1 { 
@@ -82,11 +111,117 @@ body {
   margin-bottom: 16px;
 }
 
+.search-cta {
+  margin: 0 0 14px;
+  font-size: clamp(16px, 4.6vw, 18px);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+}
+
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(229, 231, 235, 0.95);
+}
+
+.search-compact-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.search--compact .search-compact-bar {
+  display: flex;
+}
+
+.search--compact .search-fields {
+  display: none;
+}
+
+.search--compact.search {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+}
+
+.search-compact-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.search-compact-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(156, 163, 175, 0.88);
+}
+
+.search-compact-street {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.25;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-change-btn {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(52, 211, 153, 0.38);
+  background: rgba(52, 211, 153, 0.09);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+  min-height: 44px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-change-btn:active {
+  background: rgba(52, 211, 153, 0.18);
+}
+
+@media (min-width: 640px) {
+  .search--compact.search {
+    padding: 14px 18px;
+    margin-bottom: 14px;
+  }
+
+  .search-change-btn {
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .search-compact-street {
+    font-size: 16px;
+  }
+
+  .search-compact-label {
+    font-size: 11px;
+  }
+}
+
 .search-row {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .autocomplete-container {
@@ -120,7 +255,17 @@ input[type="text"]:focus {
     border-radius: 14px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.25);
   }
-  
+
+  .search-cta {
+    font-size: 15px;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .field-label {
+    font-size: 14px;
+  }
+
   .search-row {
     gap: 12px;
     margin-top: 8px;
@@ -195,7 +340,11 @@ button:active {
   }
 }
 
-.hint { color: var(--muted); margin-top: 8px; }
+.hint {
+  color: var(--muted);
+  margin-top: 10px;
+  font-size: 13px;
+}
 
 .results {
   margin-top: 20px;
@@ -397,6 +546,39 @@ button:active {
     font-size: 8px;
     top: 1px;
     right: 1px;
+  }
+
+  .site-header {
+    padding-top: 12px;
+    padding-bottom: 8px;
+  }
+
+  .header-tagline {
+    display: none;
+  }
+
+  .site-footer {
+    padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .site-footer p {
+    margin: 4px auto;
+    max-width: 21rem;
+    font-size: 10px;
+    line-height: 1.42;
+    color: rgba(156, 163, 175, 0.52);
+  }
+
+  .site-footer a {
+    color: rgba(52, 211, 153, 0.55);
+    text-decoration: underline;
+    text-decoration-color: rgba(52, 211, 153, 0.22);
+    text-underline-offset: 2px;
+  }
+
+  .hint {
+    font-size: 12px;
+    margin-top: 8px;
   }
 }
 
