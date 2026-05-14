@@ -12,15 +12,44 @@
     'Friday': 5
   };
 
-  // Holiday dates for 2025 (when holidays fall on weekdays, pickup is pushed back 1 day)
-  const holidays = [
-    { name: "New Year's Day", month: 0, day: 1 }, // January 1
-    { name: "Memorial Day", month: 4, day: 26 }, // Last Monday in May (2025)
-    { name: "Independence Day", month: 6, day: 4 }, // July 4
-    { name: "Labor Day", month: 8, day: 1 }, // First Monday in September (2025)
-    { name: "Thanksgiving Day", month: 10, day: 27 }, // Fourth Thursday in November (2025)
-    { name: "Christmas Day", month: 11, day: 25 } // December 25
-  ];
+  // Holidays (weekday-only pickup delay matches municipality rule for observed holidays)
+
+  /** `monthIndex` 0–11; `targetDow` 0=Sun … 6=Sat */
+  function lastWeekdayOfMonth(year, monthIndex, targetDow) {
+    const last = new Date(year, monthIndex + 1, 0);
+    const dow = last.getDay();
+    last.setDate(last.getDate() - ((dow - targetDow + 7) % 7));
+    return last.getDate();
+  }
+
+  /** First `targetDow` in month */
+  function firstWeekdayOfMonth(year, monthIndex, targetDow) {
+    const d = new Date(year, monthIndex, 1);
+    const dow = d.getDay();
+    d.setDate(1 + ((targetDow - dow + 7) % 7));
+    return d.getDate();
+  }
+
+  /** Nth occurrence (1-based) of `targetDow` in month */
+  function nthWeekdayOfMonth(year, monthIndex, targetDow, n) {
+    const first = firstWeekdayOfMonth(year, monthIndex, targetDow);
+    return first + (n - 1) * 7;
+  }
+
+  /**
+   * Calendar dates for holidays in `year` (month 0–11, day of month).
+   * Floating holidays follow US federal patterns used on Mt. Lebanon’s schedule.
+   */
+  function getTrashScheduleHolidays(year) {
+    return [
+      { name: "New Year's Day", month: 0, day: 1 },
+      { name: 'Memorial Day', month: 4, day: lastWeekdayOfMonth(year, 4, 1) },
+      { name: 'Independence Day', month: 6, day: 4 },
+      { name: 'Labor Day', month: 8, day: firstWeekdayOfMonth(year, 8, 1) },
+      { name: 'Thanksgiving Day', month: 10, day: nthWeekdayOfMonth(year, 10, 4, 4) },
+      { name: 'Christmas Day', month: 11, day: 25 }
+    ];
+  }
 
   // Street schedule data - will be loaded from CSV
   let streetSchedule = {};
@@ -164,8 +193,9 @@
     // Only weekdays (Monday-Friday) affect pickup
     if (weekday === 0 || weekday === 6) return false;
     
-    return holidays.some(holiday => 
-      holiday.month === month && holiday.day === day
+    const y = date.getFullYear();
+    return getTrashScheduleHolidays(y).some(
+      (holiday) => holiday.month === month && holiday.day === day
     );
   }
 
@@ -307,7 +337,7 @@
       
       // Add tooltips
       if (isHoliday) {
-        const holiday = holidays.find(h => h.month === month && h.day === d);
+        const holiday = getTrashScheduleHolidays(year).find((h) => h.month === month && h.day === d);
         if (holiday) {
           el.title = holiday.name + ' - Pickup pushed back 1 day';
         }
@@ -602,8 +632,8 @@
       const date = new Date(year, month, d);
       const weekday = date.getDay();
       // Check if this is any holiday (not just pickup-affecting ones)
-      const isHoliday = holidays.some(holiday => 
-        holiday.month === month && holiday.day === d
+      const isHoliday = getTrashScheduleHolidays(year).some(
+        (holiday) => holiday.month === month && holiday.day === d
       );
       const isRecycling = isRecyclingWeek(date);
       // Don't highlight today in print version - it should be static
@@ -1077,7 +1107,7 @@
     exportDescription.style.margin = '0 0 12px 0';
     exportDescription.style.color = 'var(--muted)';
     exportDescription.style.fontSize = '14px';
-    exportDescription.innerHTML = 'Download a <strong>personalized calendar file</strong> with your custom reminder settings. The calendar includes events from the current month through December 2025 and works with Google Calendar, Apple Calendar, Outlook, and any other calendar app.';
+    exportDescription.innerHTML = `Download a <strong>personalized calendar file</strong> with your custom reminder settings. The calendar includes events from the current month through December ${year} and works with Google Calendar, Apple Calendar, Outlook, and any other calendar app.`;
     
     const exportButtons = document.createElement('div');
     exportButtons.className = 'export-buttons';
@@ -1195,7 +1225,7 @@
       monthTitle.style.fontSize = '18px';
       
       // Check if there are holidays this month that affect pickup
-      const monthHolidays = holidays.filter(h => h.month === month);
+      const monthHolidays = getTrashScheduleHolidays(year).filter((h) => h.month === month);
       let holidayNote = '';
       if (monthHolidays.length > 0) {
         holidayNote = document.createElement('p');
