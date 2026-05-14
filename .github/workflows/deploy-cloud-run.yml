@@ -1,0 +1,72 @@
+# Deploy static site to Cloud Run on pushes to main (mirrors scripts/deploy-cloud-run.sh).
+#
+# Required GitHub secrets:
+#   GCP_SA_JSON   Full JSON body of a GCP service account key (see readme.md)
+#
+# Required GitHub variables (repository or environment):
+#   GCP_PROJECT_ID
+#   GCP_REGION                     e.g. us-east1
+
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cloud-run-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_JSON }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build image (Cloud Build) and deploy
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GCP_PROJECT_ID:-}" || -z "${GCP_REGION:-}" ]]; then
+            echo "Set repository Variables: GCP_PROJECT_ID and GCP_REGION" >&2
+            exit 1
+          fi
+
+          SERVICE_NAME="mt-lebo-trash-web"
+          SHORT_SHA="${GITHUB_SHA:0:12}"
+          IMAGE_URI="gcr.io/${GCP_PROJECT_ID}/${SERVICE_NAME}:${SHORT_SHA}"
+
+          gcloud config set project "$GCP_PROJECT_ID"
+
+          gcloud builds submit --tag "$IMAGE_URI" .
+
+          gcloud run deploy "$SERVICE_NAME" \
+            --image "$IMAGE_URI" \
+            --platform managed \
+            --region "$GCP_REGION" \
+            --allow-unauthenticated \
+            --ingress all \
+            --port 80 \
+            --quiet
+
+          echo "Deployed:"
+          gcloud run services describe "$SERVICE_NAME" \
+            --region "$GCP_REGION" \
+            --format='value(status.url)'

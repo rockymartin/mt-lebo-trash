@@ -68,6 +68,47 @@ export GCP_REGION="us-east1"
 ./scripts/deploy-cloud-run.sh
 ```
 
+### Continuous deployment (GitHub Actions)
+
+Pushes to **`main`** run [`.github/workflows/deploy-cloud-run.yml`](.github/workflows/deploy-cloud-run.yml): Cloud Build produces the image (same as the script above), then Cloud Run is updated.
+
+**Repository Variables** (Settings → Secrets and variables → Actions → Variables):
+
+| Variable | Example |
+|----------|---------|
+| `GCP_PROJECT_ID` | Your GCP project ID |
+| `GCP_REGION` | `us-east1` |
+
+**Repository Secrets:**
+
+| Secret | Value |
+|--------|--------|
+| `GCP_SA_JSON` | Paste the **full contents** of a GCP service account key JSON file (single-line or multiline is fine). |
+
+**Create the key (once):**
+
+1. In GCP: **IAM & Admin → Service Accounts** → create or pick a deployer account (e.g. `github-actions-deploy`).
+2. Grant it at least:
+   - **Cloud Build Editor** (`roles/cloudbuild.builds.editor`) — or broader Editor on tiny projects  
+   - **Cloud Run Admin** (`roles/run.admin`)  
+   - **Service Account User** (`roles/iam.serviceAccountUser`)  
+   - **`roles/storage.admin`** (or narrower storage roles) if pushes to **`gcr.io`** fail — Cloud Build artifact upload often needs this  
+3. **Keys → Add key → JSON**, download locally, copy the entire file into the **`GCP_SA_JSON`** secret in GitHub. **Do not commit the JSON file** to git.
+
+Treat **`GCP_SA_JSON` like a password**: rotate or delete the key if it leaks; prefer a dedicated SA with only deploy/build roles.
+
+**Difficulty:** About **10 minutes** (SA + IAM + one GitHub secret). Merges to `main` deploy automatically after that.
+
+For OIDC without JSON keys (Workload Identity Federation), see [google-github-actions/auth](https://github.com/google-github-actions/auth).
+
+**Cost (typical):**
+
+| Piece | Rough notes |
+|-------|----------------|
+| **GitHub Actions** | Uses a few CPU-minutes per deploy on hosted runners; within normal free allowances for many repos. |
+| **Cloud Build** | Minutes accumulate per build; GCP includes a monthly free tier — small nginx builds usually stay low. |
+| **Cloud Run** | Static nginx service with low traffic is typically **cents/month** on scale-to-zero–friendly settings; you already pay when deploying manually today. |
+
 ## Data Source
 
 Street schedule data is sourced from the official [Mt. Lebanon Public Works garbage collection page](https://mtlebanon.org/residents/public-works/garbage/).
