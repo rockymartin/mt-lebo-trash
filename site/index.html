@@ -88,27 +88,40 @@
   <body itemscope itemtype="https://schema.org/WebPage">
     <header class="site-header" role="banner">
       <h1 itemprop="headline">Mt. Lebo Trash & Recycling Calendar</h1>
-      <p itemprop="description">Find your trash and recycling pickup calendar by street in Mt. Lebanon, PA.</p>
+      <p class="header-tagline" itemprop="description">Find your trash and recycling pickup calendar by street in Mt. Lebanon, PA.</p>
     </header>
 
     <main class="container" role="main" itemprop="mainContentOfPage">
-          <section class="search" aria-labelledby="search-heading">
+          <section class="search" id="street-search" aria-labelledby="search-heading">
             <h2 id="search-heading" class="visually-hidden">Search for your street</h2>
-            <label for="street-input">Street name</label>
-            <div class="search-row">
-              <div class="autocomplete-container">
-                <input 
-                  id="street-input" 
-                  type="text" 
-                  placeholder="e.g., Washington Rd" 
-                  autocomplete="off"
-                  aria-label="Enter your street name to find your trash and recycling schedule"
-                  aria-describedby="hint"
-                />
-                <div id="autocomplete-list" class="autocomplete-list" role="listbox"></div>
+            <div id="search-compact-bar" class="search-compact-bar">
+              <div class="search-compact-info">
+                <span class="search-compact-label">Showing schedule for</span>
+                <span id="compact-street-name" class="search-compact-street"></span>
               </div>
+              <button type="button" id="search-change-btn" class="search-change-btn">
+                Change street
+              </button>
             </div>
-            <p id="hint" class="hint">Start typing your street name to see suggestions and generate your calendar.</p>
+            <div id="search-fields" class="search-fields">
+              <p id="search-cta" class="search-cta">Enter your street name below — tap a suggestion when your street appears.</p>
+              <label class="field-label" for="street-input">Street name</label>
+              <div class="search-row">
+                <div class="autocomplete-container">
+                  <input 
+                    id="street-input" 
+                    type="text" 
+                    placeholder="Try Washington Rd or your street…" 
+                    autocomplete="off"
+                    inputmode="text"
+                    aria-label="Enter your street name to find your trash and recycling schedule"
+                    aria-describedby="hint search-cta"
+                  />
+                  <div id="autocomplete-list" class="autocomplete-list" role="listbox"></div>
+                </div>
+              </div>
+              <p id="hint" class="hint">Suggestions narrow as you type; then your pickup calendar loads.</p>
+            </div>
           </section>
 
       <section id="results" class="results" aria-live="polite" aria-atomic="true"></section>

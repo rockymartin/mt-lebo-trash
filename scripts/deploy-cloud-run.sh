@@ -6,7 +6,8 @@ if [[ -z "${GCP_PROJECT_ID:-}" || -z "${GCP_REGION:-}" ]]; then
   exit 1
 fi
 
-SERVICE_NAME="mt-lebo-trash-web"
+# Optional: SERVICE_NAME=mt-lebo-trash-web-staging ./scripts/deploy-cloud-run.sh for a separate test URL
+SERVICE_NAME="${SERVICE_NAME:-mt-lebo-trash-web}"
 IMAGE_URI="gcr.io/$GCP_PROJECT_ID/$SERVICE_NAME:$(date +%Y%m%d%H%M%S)"
 
 # Use Cloud Build instead of local Docker
