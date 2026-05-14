@@ -1,8 +1,7 @@
 # Deploy static site to Cloud Run on pushes to main (mirrors scripts/deploy-cloud-run.sh).
 #
-# Required GitHub secrets (Workload Identity Federation — recommended):
-#   GCP_WORKLOAD_IDENTITY_PROVIDER  e.g. projects/123/locations/global/workloadIdentityPools/github/providers/gh-provider
-#   GCP_SERVICE_ACCOUNT             deployer SA email (see readme.md)
+# Required GitHub secrets:
+#   GCP_SA_JSON   Full JSON body of a GCP service account key (see readme.md)
 #
 # Required GitHub variables (repository or environment):
 #   GCP_PROJECT_ID
@@ -21,7 +20,6 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   deploy:
@@ -35,8 +33,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          credentials_json: ${{ secrets.GCP_SA_JSON }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2

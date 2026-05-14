@@ -79,23 +79,27 @@ Pushes to **`main`** run [`.github/workflows/deploy-cloud-run.yml`](.github/work
 | `GCP_PROJECT_ID` | Your GCP project ID |
 | `GCP_REGION` | `us-east1` |
 
-**Repository Secrets** — use **Workload Identity Federation** (no long-lived JSON keys):
+**Repository Secrets:**
 
 | Secret | Value |
 |--------|--------|
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Full provider resource name, e.g. `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_NAME/providers/PROVIDER_NAME` |
-| `GCP_SERVICE_ACCOUNT` | Email of a deployer service account |
+| `GCP_SA_JSON` | Paste the **full contents** of a GCP service account key JSON file (single-line or multiline is fine). |
 
-Grant that service account at least:
+**Create the key (once):**
 
-- **Cloud Build Editor** (`roles/cloudbuild.builds.editor`) — or Editor on the project for small setups  
-- **Cloud Run Admin** (`roles/run.admin`)  
-- **Service Account User** (`roles/iam.serviceAccountUser`) on the Cloud Run runtime service account  
-- Permission for Cloud Build to push to **Container Registry** / **`gcr.io`** (often included via Cloud Build service account defaults)
+1. In GCP: **IAM & Admin → Service Accounts** → create or pick a deployer account (e.g. `github-actions-deploy`).
+2. Grant it at least:
+   - **Cloud Build Editor** (`roles/cloudbuild.builds.editor`) — or broader Editor on tiny projects  
+   - **Cloud Run Admin** (`roles/run.admin`)  
+   - **Service Account User** (`roles/iam.serviceAccountUser`)  
+   - **`roles/storage.admin`** (or narrower storage roles) if pushes to **`gcr.io`** fail — Cloud Build artifact upload often needs this  
+3. **Keys → Add key → JSON**, download locally, copy the entire file into the **`GCP_SA_JSON`** secret in GitHub. **Do not commit the JSON file** to git.
 
-Setup walkthrough: [Authenticate to Google Cloud from GitHub Actions (WIF)](https://github.com/google-github-actions/auth#setting-up-workload-identity-federation).
+Treat **`GCP_SA_JSON` like a password**: rotate or delete the key if it leaks; prefer a dedicated SA with only deploy/build roles.
 
-**Difficulty:** One-time GCP wiring (~15–30 minutes if you follow Google’s guide). After that, merges to `main` deploy automatically.
+**Difficulty:** About **10 minutes** (SA + IAM + one GitHub secret). Merges to `main` deploy automatically after that.
+
+For OIDC without JSON keys (Workload Identity Federation), see [google-github-actions/auth](https://github.com/google-github-actions/auth).
 
 **Cost (typical):**
 
