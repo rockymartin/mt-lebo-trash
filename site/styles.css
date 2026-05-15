@@ -8,12 +8,22 @@
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+
+/* Canvas behind rubber-band / overscroll (otherwise mobile Safari shows white). */
+html {
+  background-color: var(--bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
 body {
   margin: 0;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   min-height: 100dvh;
+  min-height: -webkit-fill-available;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   background: linear-gradient(180deg, #0b1020, var(--bg));
   color: var(--text);
@@ -38,31 +48,35 @@ body {
 
 .site-header {
   text-align: center;
-  padding: 16px 12px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 8px;
 }
 
 .site-footer {
   text-align: center;
-  padding: 16px 12px;
+  padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px));
   margin-top: auto;
 }
 
 .site-footer p {
-  margin: 8px 0;
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--muted);
+  margin: 4px auto;
+  max-width: 21rem;
+  font-size: 10px;
+  line-height: 1.42;
+  color: rgba(156, 163, 175, 0.52);
 }
 
 .site-footer a {
-  color: var(--accent);
+  color: rgba(52, 211, 153, 0.55);
+  text-decoration: underline;
+  text-decoration-color: rgba(52, 211, 153, 0.22);
+  text-underline-offset: 2px;
 }
 
 .site-footer a:hover {
-  color: var(--accent-strong);
+  color: rgba(52, 211, 153, 0.85);
 }
 .site-header h1 { 
-  margin: 0 0 8px; 
+  margin: 0 0 6px; 
   font-size: 24px; 
   font-weight: 700;
   line-height: 1.2;
@@ -70,8 +84,12 @@ body {
 .site-header p { 
   margin: 0; 
   color: var(--muted); 
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.header-tagline {
+  display: none;
 }
 
 .container {
@@ -81,24 +99,10 @@ body {
   flex: 1 0 auto;
 }
 
-/* Mobile-first responsive design */
+/* Center content on wide screens; spacing matches mobile */
 @media (min-width: 640px) {
-  .site-header {
-    padding: 24px 16px;
-  }
-
-  .site-footer {
-    padding: 24px 16px;
-  }
-  .site-header h1 { 
-    font-size: 28px; 
-  }
-  .site-header p { 
-    font-size: 16px; 
-  }
   .container {
     max-width: 860px;
-    padding: 16px;
   }
 }
 
@@ -196,27 +200,6 @@ body {
   background: rgba(52, 211, 153, 0.18);
 }
 
-@media (min-width: 640px) {
-  .search--compact.search {
-    padding: 14px 18px;
-    margin-bottom: 14px;
-  }
-
-  .search-change-btn {
-    min-height: 40px;
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-
-  .search-compact-street {
-    font-size: 16px;
-  }
-
-  .search-compact-label {
-    font-size: 11px;
-  }
-}
-
 .search-row {
   display: flex;
   flex-direction: column;
@@ -246,30 +229,6 @@ input[type="text"]:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.1);
-}
-
-/* Mobile optimizations for search */
-@media (min-width: 640px) {
-  .search {
-    padding: 20px;
-    border-radius: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  }
-
-  .search-cta {
-    font-size: 15px;
-    margin-bottom: 12px;
-    font-weight: 600;
-  }
-
-  .field-label {
-    font-size: 14px;
-  }
-
-  .search-row {
-    gap: 12px;
-    margin-top: 8px;
-  }
 }
 
 .autocomplete-list {
@@ -330,89 +289,105 @@ button:active {
   transform: translateY(0);
 }
 
-/* Mobile button optimizations */
-@media (min-width: 640px) {
-  button {
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 14px;
-    min-height: auto;
-  }
-}
-
 .hint {
   color: var(--muted);
-  margin-top: 10px;
-  font-size: 13px;
+  margin-top: 8px;
+  font-size: 12px;
 }
 
 .results {
   margin-top: 20px;
 }
 
+.export-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+  margin-inline: auto;
+}
+
+.export-buttons .export-action-btn {
+  width: 100%;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.export-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-buttons button.export-action-btn--secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+}
+
+.export-buttons button.export-action-btn--secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
 .card {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.card h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.card h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.card p {
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 2px;
   margin-top: 12px;
 }
 
 .day {
-  padding: 8px 4px;
+  padding: 6px 2px;
   background: rgba(17, 24, 39, 0.6);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 6px;
   text-align: center;
   color: var(--muted);
   position: relative;
-  font-size: 12px;
-  min-height: 36px;
+  font-size: 11px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .day-header {
-  padding: 6px 4px;
+  padding: 4px 2px;
   background: rgba(52, 211, 153, 0.1);
   border: 1px solid rgba(52, 211, 153, 0.2);
   border-radius: 6px;
   text-align: center;
   color: var(--accent);
   font-weight: 600;
-  font-size: 12px;
-  min-height: 28px;
+  font-size: 11px;
+  min-height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Mobile calendar optimizations */
-@media (min-width: 640px) {
-  .calendar {
-    gap: 6px;
-  }
-  
-  .day {
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 14px;
-    min-height: auto;
-  }
-  
-  .day-header {
-    padding: 8px;
-    border-radius: 8px;
-    font-size: 14px;
-    min-height: auto;
-  }
 }
 
 .day.empty {
@@ -425,7 +400,7 @@ button:active {
 .day.holiday { background: rgba(255, 193, 7, 0.2); border: 1px solid rgba(255, 193, 7, 0.4); }
 .day.holiday.pickup { background: rgba(52, 211, 153, 0.3); outline: 2px solid var(--accent); }
 .day.recycling { background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); }
-.day.recycling::after { content: '♻️'; position: absolute; top: 2px; right: 2px; font-size: 10px; }
+.day.recycling::after { content: '♻️'; position: absolute; top: 1px; right: 1px; font-size: 8px; }
 .day.today { background: rgba(59, 130, 246, 0.3); border: 2px solid rgba(59, 130, 246, 0.6); font-weight: 700; color: #ffffff; }
 
 /* Street options for multiple matches */
@@ -439,8 +414,10 @@ button:active {
 .street-option {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -460,126 +437,13 @@ button:active {
 }
 
 .collection-day {
+  align-self: flex-end;
   color: var(--accent);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   background: rgba(52, 211, 153, 0.1);
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 4px;
-}
-
-/* Mobile-specific optimizations */
-@media (max-width: 639px) {
-  .card {
-    padding: 12px;
-    border-radius: 10px;
-  }
-  
-  .card h2 {
-    font-size: 20px;
-    margin-bottom: 12px;
-  }
-  
-  .card h3 {
-    font-size: 18px;
-    margin-bottom: 8px;
-  }
-  
-  .card p {
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  
-  /* Export buttons mobile layout */
-  .export-buttons {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .export-buttons button {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  /* Street options mobile layout */
-  .street-option {
-    padding: 12px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .street-option strong {
-    font-size: 16px;
-  }
-  
-  .collection-day {
-    align-self: flex-end;
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-  
-  /* Instructions mobile layout */
-  .instructions {
-    font-size: 12px;
-    padding: 10px;
-  }
-  
-  /* Calendar mobile optimizations */
-  .calendar {
-    gap: 2px;
-  }
-  
-  .day {
-    padding: 6px 2px;
-    font-size: 11px;
-    min-height: 32px;
-  }
-  
-  .day-header {
-    padding: 4px 2px;
-    font-size: 11px;
-    min-height: 24px;
-  }
-  
-  .day.recycling::after {
-    font-size: 8px;
-    top: 1px;
-    right: 1px;
-  }
-
-  .site-header {
-    padding-top: 12px;
-    padding-bottom: 8px;
-  }
-
-  .header-tagline {
-    display: none;
-  }
-
-  .site-footer {
-    padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .site-footer p {
-    margin: 4px auto;
-    max-width: 21rem;
-    font-size: 10px;
-    line-height: 1.42;
-    color: rgba(156, 163, 175, 0.52);
-  }
-
-  .site-footer a {
-    color: rgba(52, 211, 153, 0.55);
-    text-decoration: underline;
-    text-decoration-color: rgba(52, 211, 153, 0.22);
-    text-underline-offset: 2px;
-  }
-
-  .hint {
-    font-size: 12px;
-    margin-top: 8px;
-  }
 }
 
 /* Touch-friendly improvements */
@@ -618,23 +482,27 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.1);
 }
 
-/* Mobile reminder controls */
-@media (max-width: 639px) {
-  .reminder-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  
-  .reminder-controls label {
-    font-size: 14px;
-    margin-bottom: 4px;
-  }
-  
-  select {
-    min-height: 48px;
-    font-size: 16px;
-  }
+.reminder-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
 }
 
+.reminder-controls label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.reminder-controls select {
+  min-height: 48px;
+  font-size: 16px;
+  padding: 12px 32px 12px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
 
