@@ -366,19 +366,15 @@
   }
 
   // Create export button helper
-  function createExportButton(text, icon, onClick) {
+  function createExportButton(text, icon, onClick, variant = 'primary') {
     const button = document.createElement('button');
-    button.innerHTML = `${icon} ${text}`;
-    button.style.padding = '8px 16px';
-    button.style.background = 'var(--accent)';
-    button.style.color = 'var(--bg)';
-    button.style.border = 'none';
-    button.style.borderRadius = '6px';
-    button.style.fontWeight = '600';
-    button.style.cursor = 'pointer';
-    button.style.fontSize = '13px';
-    button.style.flex = '1';
-    button.style.minWidth = '120px';
+    button.type = 'button';
+    const variantClass =
+      variant === 'secondary'
+        ? 'export-action-btn export-action-btn--secondary'
+        : 'export-action-btn';
+    button.className = variantClass;
+    button.innerHTML = icon ? `${icon} ${text}` : text;
     button.onclick = onClick;
     return button;
   }
@@ -1124,24 +1120,23 @@
     
     const exportButtons = document.createElement('div');
     exportButtons.className = 'export-buttons';
-    exportButtons.style.display = 'flex';
-    exportButtons.style.gap = '8px';
-    exportButtons.style.flexWrap = 'wrap';
-    
+
     // Download calendar file button
-    const calendarButton = createExportButton('📥 Download Calendar Events', '', () => exportToICal(streetName, rule.weekday, year));
-    calendarButton.style.background = 'var(--accent)';
-    calendarButton.style.fontWeight = '700';
-    calendarButton.style.flex = '1';
-    calendarButton.style.minWidth = '200px';
-    
+    const calendarButton = createExportButton(
+      '📥 Download Calendar Events',
+      '',
+      () => exportToICal(streetName, rule.weekday, year),
+      'primary'
+    );
+
     // Print calendar button
-    const printButton = createExportButton('🖨️ Print Calendar', '', () => printCalendar(streetName, rule.weekday, year));
-    printButton.style.background = 'rgba(255, 255, 255, 0.1)';
-    printButton.style.color = 'var(--text)';
-    printButton.style.flex = '1';
-    printButton.style.minWidth = '200px';
-    
+    const printButton = createExportButton(
+      '🖨️ Print Calendar',
+      '',
+      () => printCalendar(streetName, rule.weekday, year),
+      'secondary'
+    );
+
     exportButtons.appendChild(calendarButton);
     exportButtons.appendChild(printButton);
     
@@ -1160,24 +1155,14 @@
     reminderTitle.style.fontSize = '16px';
     
     const reminderControls = document.createElement('div');
-    reminderControls.style.display = 'flex';
-    reminderControls.style.gap = '12px';
-    reminderControls.style.alignItems = 'center';
-    reminderControls.style.flexWrap = 'wrap';
-    
+    reminderControls.className = 'reminder-controls';
+
     const reminderLabel = document.createElement('label');
     reminderLabel.textContent = 'Remind me 1 day before pickup at:';
-    reminderLabel.style.color = 'var(--text)';
-    reminderLabel.style.fontWeight = '500';
-    
+    reminderLabel.setAttribute('for', 'reminder-hour');
+
     const timeSelect = document.createElement('select');
     timeSelect.id = 'reminder-hour';
-    timeSelect.style.padding = '8px 12px';
-    timeSelect.style.borderRadius = '6px';
-    timeSelect.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-    timeSelect.style.background = 'rgba(255, 255, 255, 0.1)';
-    timeSelect.style.color = 'var(--text)';
-    timeSelect.style.fontSize = '14px';
     
     // Add time options (12-hour format with AM/PM)
     const timeOptions = [
