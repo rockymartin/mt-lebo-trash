@@ -20,14 +20,16 @@ A modern web application that helps Mt. Lebanon, PA residents find their trash a
 - **Frontend**: Vanilla HTML, CSS, JavaScript
 - **Deployment**: Google Cloud Run with Nginx
 - **Data**: CSV-based street schedule from Mt. Lebanon Public Works
-- **SEO**: Optimized meta tags, structured data, sitemap
+- **SEO**: Static pages per street, pickup-day indexes, FAQ schema, sitemap (`npm run build`)
 
 ## Local Development
 
 ### Option 1: Python HTTP Server (Recommended)
 ```bash
 npm run dev
-# or
+# runs build-seo.py first, then serves site/
+# or manually:
+npm run build
 python3 -m http.server 8080 --directory site
 ```
 

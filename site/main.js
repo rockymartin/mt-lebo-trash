@@ -57,6 +57,79 @@
   // Street schedule data - will be loaded from CSV
   let streetSchedule = {};
   let allStreets = []; // Array to store all street variants
+  let slugByStreet = {}; // canonical CSV street name (lowercase) -> URL slug
+
+  function slugifyStreetName(streetName) {
+    let s = streetName.toLowerCase().trim();
+    s = s.replace(/[()]/g, ' ');
+    s = s.replace(/[^\w\s-]/g, '');
+    s = s.replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return s.length > 80 ? s.slice(0, 80) : s;
+  }
+
+  function getSlugForStreet(streetName) {
+    if (!streetName) return null;
+    return slugByStreet[streetName.toLowerCase()] || slugifyStreetName(streetName);
+  }
+
+  function updateStreetUrl(streetName, replace) {
+    const slug = getSlugForStreet(streetName);
+    if (!slug || typeof history === 'undefined') return;
+    const path = `/schedule/${slug}/`;
+    if (location.pathname === path) return;
+    const method = replace ? 'replaceState' : 'pushState';
+    history[method]({ street: streetName }, '', path);
+  }
+
+  async function loadStreetSlugs() {
+    try {
+      const response = await fetch('/data/street-slugs.json');
+      if (!response.ok) return;
+      const slugToStreet = await response.json();
+      slugByStreet = {};
+      for (const [slug, street] of Object.entries(slugToStreet)) {
+        slugByStreet[street.toLowerCase()] = slug;
+      }
+    } catch (error) {
+      console.warn('Could not load street slugs:', error);
+    }
+  }
+
+  async function resolveInitialStreet() {
+    const fromBody = document.body.dataset.street;
+    if (fromBody) return fromBody;
+
+    const pathMatch = location.pathname.match(/^\/schedule\/([^/]+)\/?$/);
+    if (pathMatch) {
+      try {
+        const response = await fetch('/data/street-slugs.json');
+        if (response.ok) {
+          const slugToStreet = await response.json();
+          const street = slugToStreet[pathMatch[1]];
+          if (street) return street;
+        }
+      } catch (error) {
+        console.warn('Could not resolve street from URL:', error);
+      }
+    }
+
+    const params = new URLSearchParams(location.search);
+    const slugParam = params.get('street');
+    if (slugParam) {
+      try {
+        const response = await fetch('/data/street-slugs.json');
+        if (response.ok) {
+          const slugToStreet = await response.json();
+          const street = slugToStreet[slugParam];
+          if (street) return street;
+        }
+      } catch (error) {
+        console.warn('Could not resolve street from query:', error);
+      }
+    }
+
+    return null;
+  }
 
   // Load street schedule data from CSV
   async function loadStreetSchedule() {
@@ -1284,6 +1357,7 @@
   function selectStreet(streetName) {
     streetInput.value = formatStreetName(streetName);
     autocompleteList.style.display = 'none';
+    updateStreetUrl(streetName, false);
     renderCalendar(streetName);
   }
 
@@ -1353,7 +1427,7 @@
   }
 
   // Initialize the app
-  loadStreetSchedule().then(() => {
+  Promise.all([loadStreetSchedule(), loadStreetSlugs()]).then(async () => {
     streetInput.addEventListener('input', updateAutocomplete);
     streetInput.addEventListener('keydown', handleKeydown);
 
@@ -1361,17 +1435,27 @@
       searchChangeBtn.addEventListener('click', () => {
         setSearchMinimized(false);
         autocompleteList.style.display = 'none';
+        results.innerHTML = '';
+        if (typeof history !== 'undefined') {
+          history.pushState({}, '', '/');
+        }
         streetInput.focus();
         streetInput.select();
       });
     }
-    
-    // Hide autocomplete when clicking outside
+
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.autocomplete-container')) {
         autocompleteList.style.display = 'none';
       }
     });
+
+    const initialStreet = await resolveInitialStreet();
+    if (initialStreet) {
+      streetInput.value = formatStreetName(initialStreet);
+      updateStreetUrl(initialStreet, true);
+      renderCalendar(initialStreet);
+    }
   });
 })();
 
