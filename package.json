@@ -4,6 +4,8 @@
   "description": "Mt. Lebanon Trash & Recycling Collection Calendar - Find your pickup schedule by street name",
   "scripts": {
     "build": "python3 scripts/build-seo.py",
+    "test:deploy": "bash scripts/test-local-deploy.sh",
+    "test:deploy:docker": "bash scripts/test-local-deploy.sh --docker",
     "predev": "npm run build",
     "dev": "python3 -m http.server 8080 --directory site",
     "start": "python3 -m http.server 8080 --directory site"
