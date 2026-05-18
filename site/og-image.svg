@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Mt. Lebanon Trash and Recycling Calendar">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="80" y="200" fill="#34d399" font-family="system-ui, sans-serif" font-size="28" font-weight="600">Mt. Lebo Trash Calendar</text>
+  <text x="80" y="280" fill="#e5e7eb" font-family="system-ui, sans-serif" font-size="56" font-weight="700">Trash &amp; Recycling Schedule</text>
+  <text x="80" y="350" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="32">Mt. Lebanon, PA · Search by street name</text>
+  <text x="80" y="520" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="24">mtlebotrash.com</text>
+  <text x="1000" y="520" text-anchor="end" font-size="72">=Ñ</text>
+</svg>
