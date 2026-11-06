@@ -118,8 +118,11 @@ def common_head(title: str, description: str, canonical_path: str, extra_json_ld
     <meta name="twitter:image" content="{html.escape(og_image)}" />
     <meta name="geo.region" content="US-PA" />
     <meta name="geo.placename" content="Mt. Lebanon, Pennsylvania" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗑️</text></svg>">
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" href="/favicon-48x48.png" type="image/png" sizes="48x48" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/styles.css?v=2026-11-06c" />
 {extra_json_ld}"""
 
 

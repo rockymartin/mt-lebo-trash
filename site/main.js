@@ -309,25 +309,53 @@
     return originalWeekday;
   }
 
-  // Determine if a week is trash-only or trash+recycling
-  // Week 1 of the year is trash-only, then alternates every other week
+  const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
+
+  // Week containing January 1 is trash-only, then recycling alternates every other week.
+  // That anchor matches the 2026 County Hauling calendar and continues across years
+  // (each new January 1 week stays trash-only) as long as the contractor keeps the same pattern.
   function isRecyclingWeek(date) {
-    // Calculate week number based on the week containing January 1st
     const year = date.getFullYear();
-    const jan1 = new Date(year, 0, 1);
-    
-    // Find the start of the week containing January 1st (Sunday)
-    const dayOfWeek = jan1.getDay();
-    const daysToWeekStart = dayOfWeek; // Sunday = 0, so no adjustment needed
-    const weekStart = new Date(year, 0, 1 - daysToWeekStart);
-    
-    // Calculate which week of the year this date falls in
-    const timeDiff = date.getTime() - weekStart.getTime();
-    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const jan1Dow = new Date(year, 0, 1).getDay();
+    // Sunday that starts the week containing January 1. UTC dates ignore daylight saving,
+    // which otherwise shifts the week by a day from March through November.
+    const weekStartUtc = Date.UTC(year, 0, 1 - jan1Dow);
+    const dateUtc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    const daysDiff = Math.round((dateUtc - weekStartUtc) / 86400000);
     const weekNumber = Math.floor(daysDiff / 7) + 1;
-    
-    // Week 1 (containing Jan 1) is trash-only (false), then alternates
     return weekNumber % 2 === 0;
+  }
+
+  /** Months to show for a calendar year. Current year starts this month; other years are Jan–Dec. */
+  function monthsForYear(year) {
+    const now = new Date();
+    const startMonth = year === now.getFullYear() ? now.getMonth() : 0;
+    const months = [];
+    for (let month = startMonth; month < 12; month++) {
+      months.push({ year, month });
+    }
+    return months;
+  }
+
+  /** Current year, plus next year from October onward so residents can load the upcoming schedule. */
+  function availableScheduleYears() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const years = [year];
+    if (now.getMonth() >= 9) {
+      years.push(year + 1);
+    }
+    return years;
+  }
+
+  function scheduleRangeLabel(months) {
+    const first = months[0];
+    const last = months[months.length - 1];
+    if (first.month === last.month) {
+      return `${MONTH_NAMES[first.month]} ${first.year}`;
+    }
+    return `${MONTH_NAMES[first.month]} through ${MONTH_NAMES[last.month]} ${first.year}`;
   }
 
   function buildCalendar(year, month, pickupWeekday) {
@@ -499,9 +527,8 @@
 
   // Generate print-friendly HTML for calendar
   function generatePrintHTML(streetName, pickupWeekday, year) {
-    const currentMonth = new Date().getMonth();
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = MONTH_NAMES;
     
     let html = `
 <!DOCTYPE html>
@@ -653,9 +680,8 @@
     </div>
     <div class="calendar-container">`;
 
-    // Generate calendars for each month from current month to December
-    for (let month = currentMonth; month < 12; month++) {
-      html += generatePrintMonthCalendar(year, month, pickupWeekday, monthNames[month]);
+    for (const slot of monthsForYear(year)) {
+      html += generatePrintMonthCalendar(slot.year, slot.month, pickupWeekday, monthNames[slot.month]);
     }
 
     html += `
@@ -789,10 +815,9 @@
   // Generate calendar events data
   function generateCalendarEvents(streetName, pickupWeekday, year) {
     const events = [];
-    const currentMonth = new Date().getMonth();
-    
-    // Generate events for current month and remaining months only
-    for (let month = currentMonth; month < 12; month++) {
+
+    for (const slot of monthsForYear(year)) {
+      const month = slot.month;
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       
       for (let day = 1; day <= daysInMonth; day++) {
@@ -922,10 +947,9 @@
   // Export calendar events to ICS format (legacy function)
   function exportToCalendar(streetName, pickupWeekday, year) {
     const events = [];
-    const currentMonth = new Date().getMonth();
-    
-    // Generate events for current month and remaining months
-    for (let month = currentMonth; month < 12; month++) {
+
+    for (const slot of monthsForYear(year)) {
+      const month = slot.month;
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       
       for (let day = 1; day <= daysInMonth; day++) {
@@ -1108,7 +1132,7 @@
     return ics.join('\r\n');
   }
 
-  function renderCalendar(streetName) {
+  function renderCalendar(streetName, selectedYear) {
     results.innerHTML = '';
     
     if (!streetName.trim()) {
@@ -1137,19 +1161,22 @@
       return;
     }
 
-    const now = new Date();
-    const year = now.getFullYear();
-    const currentMonth = now.getMonth();
+    const years = availableScheduleYears();
+    const year = years.includes(selectedYear) ? selectedYear : years[0];
+    const monthsToShow = monthsForYear(year);
+    const nextYear = years.length > 1 ? years[1] : null;
+    const showingNextYear = nextYear !== null && year === nextYear;
 
     const container = document.createElement('div');
     container.className = 'card';
     const title = document.createElement('h2');
     title.textContent = `Trash Collection Calendar for ${formatStreetName(streetName)}`;
-    const dayInfo = document.createElement('p');
-    dayInfo.textContent = `Collection Day: ${rule.day}`;
-    dayInfo.style.color = 'var(--accent)';
-    dayInfo.style.fontWeight = '600';
-    dayInfo.style.marginBottom = '16px';
+    const dayInfo = document.createElement('div');
+    dayInfo.className = 'pickup-day-callout';
+    dayInfo.setAttribute('role', 'status');
+    dayInfo.innerHTML =
+      `<div class="pickup-day-callout__label">Your trash &amp; recycling are collected on</div>` +
+      `<div class="pickup-day-callout__day">${rule.day}</div>`;
     
     // Add recycling schedule legend
     const legend = document.createElement('div');
@@ -1171,6 +1198,44 @@
       </div>
     `;
 
+    if (years.length > 1) {
+      const yearNav = document.createElement('div');
+      yearNav.className = 'year-toggle';
+      yearNav.setAttribute('role', 'group');
+      yearNav.setAttribute('aria-label', 'Calendar year');
+
+      years.forEach((y) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'year-toggle-btn' + (y === year ? ' year-toggle-btn--active' : '');
+        btn.textContent = String(y);
+        btn.setAttribute('aria-pressed', y === year ? 'true' : 'false');
+        btn.addEventListener('click', () => {
+          if (y === year) return;
+          const reminderHour = document.getElementById('reminder-hour')?.value;
+          renderCalendar(streetName, y);
+          const select = document.getElementById('reminder-hour');
+          if (select && reminderHour) select.value = reminderHour;
+        });
+        yearNav.appendChild(btn);
+      });
+
+      container.appendChild(title);
+      container.appendChild(dayInfo);
+      container.appendChild(yearNav);
+
+      if (showingNextYear) {
+        const nextYearNote = document.createElement('p');
+        nextYearNote.className = 'year-toggle-note';
+        nextYearNote.textContent =
+          `${nextYear} uses the same street days and every-other-week recycling pattern as ${years[0]} until the municipality publishes an update.`;
+        container.appendChild(nextYearNote);
+      }
+    } else {
+      container.appendChild(title);
+      container.appendChild(dayInfo);
+    }
+
     // Add export section
     const exportSection = document.createElement('div');
     exportSection.style.marginBottom = '16px';
@@ -1189,14 +1254,14 @@
     exportDescription.style.margin = '0 0 12px 0';
     exportDescription.style.color = 'var(--muted)';
     exportDescription.style.fontSize = '14px';
-    exportDescription.innerHTML = `Download a <strong>personalized calendar file</strong> with your custom reminder settings. The calendar includes events from the current month through December ${year} and works with Google Calendar, Apple Calendar, Outlook, and any other calendar app.`;
+    exportDescription.innerHTML = `Download a <strong>personalized ${year} calendar file</strong> with your custom reminder settings. The calendar includes events from ${scheduleRangeLabel(monthsToShow)} and works with Google Calendar, Apple Calendar, Outlook, and any other calendar app.`;
     
     const exportButtons = document.createElement('div');
     exportButtons.className = 'export-buttons';
 
     // Download calendar file button
     const calendarButton = createExportButton(
-      '📥 Download Calendar Events',
+      `📥 Download ${year} Calendar`,
       '',
       () => exportToICal(streetName, rule.weekday, year),
       'primary'
@@ -1204,7 +1269,7 @@
 
     // Print calendar button
     const printButton = createExportButton(
-      '🖨️ Print Calendar',
+      `🖨️ Print ${year} Calendar`,
       '',
       () => printCalendar(streetName, rule.weekday, year),
       'secondary'
@@ -1276,27 +1341,30 @@
     exportSection.appendChild(exportButtons);
     exportSection.appendChild(reminderSection);
 
-    container.appendChild(title);
-    container.appendChild(dayInfo);
     container.appendChild(legend);
     container.appendChild(exportSection);
 
-    // Generate calendars for current month and remaining months only
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    for (let month = currentMonth; month < 12; month++) {
+    const monthsHeading = document.createElement('h3');
+    monthsHeading.className = 'calendar-year-heading';
+    monthsHeading.textContent = `${year} pickup calendar`;
+    container.appendChild(monthsHeading);
+
+    for (const { year: monthYear, month } of monthsToShow) {
       const monthContainer = document.createElement('div');
       monthContainer.style.marginBottom = '24px';
       
       const monthTitle = document.createElement('h3');
-      monthTitle.textContent = monthNames[month];
+      monthTitle.textContent = MONTH_NAMES[month];
       monthTitle.style.color = 'var(--text)';
       monthTitle.style.marginBottom = '12px';
       monthTitle.style.fontSize = '18px';
       
-      // Check if there are holidays this month that affect pickup
-      const monthHolidays = getTrashScheduleHolidays(year).filter((h) => h.month === month);
+      // Weekend holidays do not delay collection. Only mention weekday holidays.
+      const monthHolidays = getTrashScheduleHolidays(monthYear).filter((h) => {
+        if (h.month !== month) return false;
+        const dow = new Date(monthYear, month, h.day).getDay();
+        return dow >= 1 && dow <= 5;
+      });
       let holidayNote = '';
       if (monthHolidays.length > 0) {
         holidayNote = document.createElement('p');
@@ -1308,7 +1376,7 @@
       
       const grid = document.createElement('div');
       grid.className = 'calendar';
-      buildCalendar(year, month, rule.weekday).forEach((d) => grid.appendChild(d));
+      buildCalendar(monthYear, month, rule.weekday).forEach((d) => grid.appendChild(d));
       
       monthContainer.appendChild(monthTitle);
       if (holidayNote) monthContainer.appendChild(holidayNote);
@@ -1318,15 +1386,17 @@
 
     results.appendChild(container);
     setSearchMinimized(true, streetName);
-    requestAnimationFrame(() => {
-      const reducedMotion =
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      results.scrollIntoView({
-        behavior: reducedMotion ? 'instant' : 'smooth',
-        block: 'start'
+    if (selectedYear === undefined) {
+      requestAnimationFrame(() => {
+        const reducedMotion =
+          typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        results.scrollIntoView({
+          behavior: reducedMotion ? 'instant' : 'smooth',
+          block: 'start'
+        });
       });
-    });
+    }
   }
 
   // Autocomplete functionality
